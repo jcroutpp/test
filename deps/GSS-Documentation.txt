@@ -1,0 +1,14 @@
+EWT Processor requires gssntlmssp package for doing NTLM auth to outlook/o365 servers.  It resolves this error which prevents EWT from retrieving emails: 
+"Received error during call to EWS: One or more errors occurred. (GSSAPI operation failed with error - An unsupported mechanism was requested. NTLM authentication requires the GSSAPI plugin 'gss-ntlmssp'.)"
+
+However, since gss-ntlmssp is not an included package on Alpine linux, which we are now using for .NET 6 containers, we needed a way to include this package.  This github issue has more info on the package for .net images, including the post at the bottom that this likely won't ever be added. https://github.com/dotnet/runtime/issues/3128#issuecomment-558782689
+
+We can however, build the package from source on an Alpine Linux container and copy the output files to any .NET 6 image that needs these dependencies.  More info on these steps here https://github.com/mikeTWC1984/gssntlm
+
+I included the dockerfile to build the package in this folder.  From there, we can run these commands to spit out the dependencies:
+
+docker build -t gsstest .  # Build and tag the container - this builds the package
+docker run -d gsstest
+docker cp <container id>:/usr/local/lib/gssntlmssp/gssntlmssp.so . # copy the output to your local system for consumption into other .net containers.
+
+To get container id - run "docker ps -a"
